@@ -1,0 +1,17 @@
+# IDE temp folder
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+.vscode/
+.idea/
+
+# folder
+assets/*
+data/*
+logs/*
+ror/*
+model/*
+
+# google drive sync file
+desktop.ini
