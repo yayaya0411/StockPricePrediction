@@ -3,8 +3,8 @@ import numpy as np
 import talib
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import datetime as datetime
+# import matplotlib.pyplot as plt
+# import datetime as datetime
 
 def talib_index(df):
     df = df.astype('float')
