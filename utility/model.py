@@ -11,7 +11,7 @@ import datetime
 import numpy as np
 
 batch_size = 32
-seq_len = 128
+seq_len = 30
 
 d_k = 256
 d_v = 256

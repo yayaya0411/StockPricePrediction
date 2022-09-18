@@ -15,7 +15,7 @@ from sklearn.preprocessing import StandardScaler
 
 from utility.utility import maybe_make_dir, make_dir
 from utility.techIndex import talib_index
-from utility.model import dnn, lstm
+from utility.model import dnn, lstm, conv1d, conv2d, transformer
 from utility.training import callback
 
 import configparser
@@ -90,6 +90,18 @@ def training_window(X, y, config):
     y_ = y[time_slide:]    
     return np.array(X_), np.array(y_)
 
+def dump_model(X, args):
+    if args.model_type == 'dnn':
+        return dnn(X)
+    if args.model_type == 'conv1d':
+        return conv1d(X)
+    if args.model_type == 'conv2d':
+        return conv2d(X)
+    if args.model_type == 'lstm':
+        return lstm(X)
+    if args.model_type == 'transformer':
+        return transformer(X)
+
 def main(config, args):
     start_time = datetime.datetime.now()
 
@@ -114,7 +126,7 @@ def main(config, args):
     X, y = training_window(X, y, config)
     logging.info(f'Make Training Windows')
     
-    model = lstm(X.shape)
+    model = dump_model(X.shape, args)
     model.fit(X, y, epochs=int(config['MODEL']['epoch']))
     print(X.shape,y.shape)
     
@@ -122,8 +134,8 @@ def main(config, args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--mode', type=str, default = 'train', required=False, help='either "train" or "test"')
-    parser.add_argument('-e', '--episode', type=int, default=50, help='number of episode to run')
-    parser.add_argument('-t', '--model_type', type=str, default='dnn', required=False, help='"dnn", "conv1d" or "lstm"')
+    parser.add_argument('-e', '--episode', type=int, default=10, help='number of episode to run')
+    parser.add_argument('-t', '--model_type', type=str, default='transformer', required=False, help='"dnn", "conv1d" or "lstm"')
     parser.add_argument('-s', '--stock', type=str, required=False, default='tech', help='stock portfolios')
     args = parser.parse_args()
 
