@@ -31,7 +31,7 @@ def dnn(n_obs):
     # model.add(Dense(units=1024, activation="relu"))
     # model.add(Dense(1, activation="linear"))
     model.add(Dense(1))
-    model.compile(loss="mse", optimizer='adam', metrics=['mae', 'mape'])
+    model.compile(loss="mse", optimizer='adam', metrics=['mse','mae', 'mape'])
     print(model.summary())
     return model
 
@@ -53,7 +53,7 @@ def conv1d(n_obs):
     # model.add(MaxPooling1D(2))
     model.add(Flatten())
     model.add(Dense(1))
-    model.compile(loss="mse", optimizer='adam', metrics=['mae', 'mape'])
+    model.compile(loss="mse", optimizer='adam', metrics=['mse','mae', 'mape'])
     print(model.summary())
     return model
 
@@ -73,7 +73,7 @@ def conv2d(n_obs):
     model.add(Flatten())
     model.add(Dense(1))
     # model.compile(loss="mse", optimizer=Adam(lr=0.001), metrics=['mae', 'mape'])
-    model.compile(loss="mse", optimizer='adam', metrics=['mae', 'mape'])
+    model.compile(loss="mse", optimizer='adam', metrics=['mse','mae', 'mape'])
     print(model.summary())
     return model
 
@@ -89,7 +89,7 @@ def lstm(n_obs):
     model.add(Flatten())
     model.add(Dropout(0.3))
     model.add(Dense(1))
-    model.compile(loss="mse", optimizer='adam', metrics=['mae', 'mape'])
+    model.compile(loss="mse", optimizer='adam', metrics=['mse','mae', 'mape'])
     print(model.summary())
     return model
 

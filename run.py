@@ -1,4 +1,3 @@
-from calendar import EPOCH
 import pickle
 import time
 import numpy as np
@@ -12,11 +11,13 @@ import os
 import datetime
 import warnings
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error
 
 from utility.utility import maybe_make_dir, make_dir
 from utility.techIndex import talib_index
 from utility.model import dnn, lstm, conv1d, conv2d, transformer
 from utility.training import callback
+import tensorflow as tf
 
 import configparser
 
@@ -64,7 +65,7 @@ def label(df, n = 1):
     df = df.iloc[n:,:]
     return df.drop(columns='label'), df['label']
 
-def scaler(X, y , config, args):
+def scaler(X, y ,config, args):
     scalerX_file = os.path.join('scaler', config['STOCK']['stock'] + config['STOCK']['scaler_X'])
     scalery_file = os.path.join('scaler', config['STOCK']['stock'] + config['STOCK']['scaler_y'])
     if args.mode == 'train':
@@ -75,8 +76,8 @@ def scaler(X, y , config, args):
         pickle.dump(scaler_X, open(scalerX_file, 'wb'))
         pickle.dump(scaler_y, open(scalery_file, 'wb'))
     if args.mode == 'test':
-        scaler_X = pickle.load(open(scalerX_file), 'rb')
-        scaler_y = pickle.load(open(scalery_file), 'rb')
+        scaler_X = pickle.load(open(scalerX_file, 'rb'))
+        scaler_y = pickle.load(open(scalery_file, 'rb'))
         X = scaler_X.transform(X.values)
         y = scaler_y.transform(y.values.reshape(-1,1))
     return X, y
@@ -90,7 +91,12 @@ def training_window(X, y, config):
     y_ = y[time_slide:]    
     return np.array(X_), np.array(y_)
 
-def dump_model(X, args):
+def split_valid(X, y, config):
+    split_ratio = float(config['STOCK']['valid_ratio'])
+    split_ind = int((X.shape[0] * (1 - split_ratio)))
+    return X[:split_ind], y[:split_ind], X[split_ind:], y[split_ind:], split_ind
+
+def load_model(X, args):
     if args.model_type == 'dnn':
         return dnn(X)
     if args.model_type == 'conv1d':
@@ -102,12 +108,20 @@ def dump_model(X, args):
     if args.model_type == 'transformer':
         return transformer(X)
 
+def inverse_predict(y, config):
+    scalery_file = os.path.join('scaler', config['STOCK']['stock'] + config['STOCK']['scaler_y'])
+    scaler_y = pickle.load(open(scalery_file, 'rb'))
+    y = scaler_y.inverse_transform(y)
+    return y
+
 def main(config, args):
     start_time = datetime.datetime.now()
 
     # basic setting
     make_dir(config)
     maybe_make_dir(f'logs/{args.mode}/{args.model_type}')
+    datetime_prefix = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+
 
     # logging    
     logging = log(config, args)
@@ -120,23 +134,48 @@ def main(config, args):
     X, y = label(df)
     logging.info(f'Make Data Label')
 
-    X, y = scaler(X, y, config, args)
+    X_scaler, y_scaler = scaler(X, y, config, args)
     logging.info(f'Scale Data')
 
-    X, y = training_window(X, y, config)
+    X_scaler, y_scaler = training_window(X_scaler, y_scaler , config)
     logging.info(f'Make Training Windows')
     
-    model = dump_model(X.shape, args)
-    model.fit(X, y, epochs=int(config['MODEL']['epoch']))
-    print(X.shape,y.shape)
-    
+    model = load_model(X_scaler.shape, args)
+    # print(args.mode) 
+
+    if args.mode == 'train':
+        X_train, y_train, X_valid, y_valid, split = split_valid(X_scaler, y_scaler, config)
+        history = model.fit(
+            X_train, y_train, 
+            epochs=int(config['MODEL']['epoch']),
+            verbose = 2,
+            validation_data=(X_valid, y_valid), 
+            callbacks = callback(config, args, datetime_prefix)
+        )
+        y_valid_inverse = inverse_predict(y_valid, config)
+
+        # score = model.evaluate(X_valid, y_valid, verbose=0)
+        valid_mse = mean_squared_error(np.array(y[int(config['MODEL']['slide'])+split:]), y_valid_inverse, squared=False)   
+        print(pd.DataFrame((np.array(y[int(config['MODEL']['slide'])+split:]).T,y_valid_inverse.T)))
+        pd.DataFrame(history.history).to_csv(f'logs/csv_logger/{args.model_type}/{datetime_prefix}_{valid_mse}.csv',)
+
+    if args.mode == 'test':
+        weight = os.path.join(f'model/{args.model_type}/{config["MODEL_WEIGHTS"][args.model_type]}')
+        print(weight)
+        model = tf.keras.models.load_model(weight)
+        y_pred = model.predict(X)
+        y_inverse = inverse_predict(y_pred, config)
+        mse = mean_squared_error(y, y_inverse, squared=False)   
+        print(y_inverse)
+        print(mse)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--mode', type=str, default = 'train', required=False, help='either "train" or "test"')
     parser.add_argument('-e', '--episode', type=int, default=10, help='number of episode to run')
-    parser.add_argument('-t', '--model_type', type=str, default='transformer', required=False, help='"dnn", "conv1d" or "lstm"')
-    parser.add_argument('-s', '--stock', type=str, required=False, default='tech', help='stock portfolios')
+    parser.add_argument('-t', '--model_type', type=str, default='lstm', required=False, help='"dnn", "conv1d", "conv2d", "lstm" or "transformer"')
+    parser.add_argument('-s', '--stock', type=str, required=False, default='TWII', help='stock index')
+    parser.add_argument('-w', '--weight', type=str, required=False, help='stock portfolios')
     args = parser.parse_args()
 
     config = configparser.ConfigParser()
