@@ -89,7 +89,7 @@ def lstm(n_obs):
     model.add(Flatten())
     model.add(Dropout(0.3))
     model.add(Dense(1))
-    model.compile(loss="mse", optimizer='adam', metrics=['mse','mae', 'mape'])
+    model.compile(loss="mse", optimizer='adam', metrics=['mse', 'mae', 'mape'])
     print(model.summary())
     return model
 

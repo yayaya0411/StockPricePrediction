@@ -1,19 +1,19 @@
 import pickle
-import time
 import numpy as np
 import argparse
-import re
-import logging
 import tqdm
 import pickle
 import pandas as pd
 import os
 import datetime
 import warnings
+import seaborn as sns
+from matplotlib import pyplot as plt
+
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
 
-from utility.utility import maybe_make_dir, make_dir
+from utility.utility import *
 from utility.techIndex import talib_index
 from utility.model import dnn, lstm, conv1d, conv2d, transformer
 from utility.training import callback
@@ -24,27 +24,6 @@ import configparser
 # turn off system warning 
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
-def log(config, args):
-    # configure logging
-    timestamp = time.strftime('%Y%m%d%H%M')
-    logging.basicConfig(
-        filename=f'logs/{args.mode}/{args.model_type}/{timestamp}_{config["STOCK"]["stock"]}.log', 
-        filemode='w',
-        format='[%(asctime)s.%(msecs)03d %(filename)s:%(lineno)3s] %(message)s', 
-        datefmt='%m/%d/%Y %H:%M:%S', 
-        level=logging.INFO
-        )
-    
-    logging.info(f'Mode:                     {args.mode}')
-    logging.info(f'Model Type:               {args.model_type}')
-    logging.info(f'Training Object:          {config["STOCK"]["stock"]}')
-    logging.info(f'Training Year:            {config["STOCK"]["train_year"]}')
-    logging.info(f'Testing Year:             {config["STOCK"]["test_year"]}')
-    logging.info(f'Window Slide:             {config["MODEL"]["slide"]} days')
-    logging.info(f'Training Episode:         {config["MODEL"]["epoch"]}')
-    logging.info(f'='*30)
-    return logging
-
 def read_data(config, args):
     # reading data by config
     if args.mode == 'train':
@@ -53,7 +32,7 @@ def read_data(config, args):
         year = config['STOCK']['test_year']   
     index_list = config['STOCK']['index'].split(',')
     train_path = os.path.join('data', config['STOCK']['stock']+'_'+ year +'.csv')
-
+    print(train_path)
     df_stock = pd.read_csv(train_path, index_col = 0)
     df_index = talib_index(df_stock)
     df_index = df_index[index_list]
@@ -148,26 +127,32 @@ def main(config, args):
         history = model.fit(
             X_train, y_train, 
             epochs=int(config['MODEL']['epoch']),
-            verbose = 2,
+            verbose = 0,
             validation_data=(X_valid, y_valid), 
             callbacks = callback(config, args, datetime_prefix)
         )
-        y_valid_inverse = inverse_predict(y_valid, config)
+        y_pred = model.predict(X_valid)
+        y_pred_inverse = inverse_predict(y_pred, config)
 
         # score = model.evaluate(X_valid, y_valid, verbose=0)
-        valid_mse = mean_squared_error(np.array(y[int(config['MODEL']['slide'])+split:]), y_valid_inverse, squared=False)   
-        print(pd.DataFrame((np.array(y[int(config['MODEL']['slide'])+split:]).T,y_valid_inverse.T)))
+        valid_mse = mean_squared_error(np.array(y[int(config['MODEL']['slide'])+split:]), y_pred_inverse, squared=False)   
+        # print(pd.DataFrame((np.array(y[int(config['MODEL']['slide'])+split:]),y_pred_inverse)))
+        print('mse',valid_mse)
         pd.DataFrame(history.history).to_csv(f'logs/csv_logger/{args.model_type}/{datetime_prefix}_{valid_mse}.csv',)
 
     if args.mode == 'test':
         weight = os.path.join(f'model/{args.model_type}/{config["MODEL_WEIGHTS"][args.model_type]}')
-        print(weight)
         model = tf.keras.models.load_model(weight)
-        y_pred = model.predict(X)
+        y_pred = model.predict(X_scaler)
         y_inverse = inverse_predict(y_pred, config)
-        mse = mean_squared_error(y, y_inverse, squared=False)   
-        print(y_inverse)
-        print(mse)
+        mse = mean_squared_error(y[int(config['MODEL']['slide']):], y_inverse, squared=False)   
+        
+        fig, ax = plt.subplots(1, 1, figsize=(12, 4), dpi=100)
+
+        sns.lineplot(data = y[int(config['MODEL']['slide']):], ax=ax, color='r',label='y_t')
+        sns.lineplot(data = y_inverse, ax=ax,color='b',label='y_p')
+        plt.show()
+        print(args.model_type,'mse',mse)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
