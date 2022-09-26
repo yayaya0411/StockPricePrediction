@@ -8,7 +8,6 @@ __pycache__/
 
 # folder
 assets/*
-data/*
 logs/*
 ror/*
 model/*
