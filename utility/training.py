@@ -20,4 +20,5 @@ def callback(config, args, datetime_prefix=None):
         save_best_only = True,
     )
 
-    return [stopping, TqdmCallback(verbose=2), tensorboard_callback, checkpoint]
+    # return [stopping, TqdmCallback(verbose=2), tensorboard_callback, checkpoint]
+    return [stopping, tensorboard_callback, checkpoint]
