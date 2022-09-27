@@ -8,7 +8,8 @@ from sklearn.preprocessing import StandardScaler
 from utility.techIndex import talib_index
 from utility.model import dnn, lstm, conv1d, conv2d, transformer
 
-def log(config):
+
+def log(config, args):
     # configure logging
     timestamp = time.strftime('%Y%m%d%H%M')
     logging.basicConfig(

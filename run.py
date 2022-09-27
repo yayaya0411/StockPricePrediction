@@ -9,6 +9,7 @@ import warnings
 import seaborn as sns
 from matplotlib import pyplot as plt
 
+from sklearn.preprocessing import StandardScaler
 
 from utility.utility import *
 from utility.training import callback
@@ -29,7 +30,7 @@ def main(config, args):
     datetime_prefix = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
     # logging    
-    logging = log(config)
+    logging = log(config, args)
     logging.info(f'Training Start')
 
     # reading data
@@ -59,6 +60,8 @@ def main(config, args):
         )
         y_pred = model.predict(X_valid)
         y_pred_inverse = inverse_predict(y_pred, config)
+
+        model_setting = config['MODEL']
         model.save_weights(f'model/{args.model_type}/{datetime_prefix}_e{model_setting["epoch"]}_s{model_setting["slide"]}')
 
         # score = model.evaluate(X_valid, y_valid, verbose=0)

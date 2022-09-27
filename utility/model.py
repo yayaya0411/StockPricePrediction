@@ -5,9 +5,6 @@ from tensorflow.keras.layers import *
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM, Conv1D, Conv2D, Flatten, BatchNormalization, MaxPooling1D, MaxPooling2D
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
-import os
-import datetime
 import numpy as np
 
 batch_size = 32
@@ -30,8 +27,8 @@ def dnn(n_obs):
     model.add(Dropout(0.3))
     # model.add(Dense(units=1024, activation="relu"))
     # model.add(Dense(1, activation="linear"))
-    model.add(Dense(1))
-    model.compile(loss="mse", optimizer='adam', metrics=['mse','mae', 'mape'])
+    model.add(Dense(1, activation="linear"))
+    model.compile(loss="mse", optimizer='adam', metrics=['mae', 'mape'])
     print(model.summary())
     return model
 
@@ -52,8 +49,8 @@ def conv1d(n_obs):
     # model.add(Dropout(0.3))
     # model.add(MaxPooling1D(2))
     model.add(Flatten())
-    model.add(Dense(1))
-    model.compile(loss="mse", optimizer='adam', metrics=['mse','mae', 'mape'])
+    model.add(Dense(1, activation="linear"))
+    model.compile(loss="mse", optimizer='adam', metrics=['mae', 'mape'])
     print(model.summary())
     return model
 
@@ -71,9 +68,9 @@ def conv2d(n_obs):
     model.add(BatchNormalization())
     model.add(MaxPooling2D(2))
     model.add(Flatten())
-    model.add(Dense(1))
+    model.add(Dense(1, activation="linear"))
     # model.compile(loss="mse", optimizer=Adam(lr=0.001), metrics=['mae', 'mape'])
-    model.compile(loss="mse", optimizer='adam', metrics=['mse','mae', 'mape'])
+    model.compile(loss="mse", optimizer='adam', metrics=['mae', 'mape'])
     print(model.summary())
     return model
 
@@ -88,8 +85,8 @@ def lstm(n_obs):
     # model.add(LSTM(256, return_sequences=True,dropout=0.3))
     model.add(Flatten())
     model.add(Dropout(0.3))
-    model.add(Dense(1))
-    model.compile(loss="mse", optimizer='adam', metrics=['mse', 'mae', 'mape'])
+    model.add(Dense(1, activation="linear"))
+    model.compile(loss="mse", optimizer='adam', metrics=['mae', 'mape'])
     print(model.summary())
     return model
 
@@ -274,7 +271,7 @@ def transformer(n_obs):
     x = Dropout(0.1)(x)
     x = Dense(64, activation='relu')(x)
     x = Dropout(0.1)(x)
-    out = Dense(1)(x)
+    out = Dense(1, activation="linear")(x)
 
     model = Model(inputs=in_seq, outputs=out)
     model.compile(loss='mse', optimizer='adam', metrics=['mae', 'mape'])
