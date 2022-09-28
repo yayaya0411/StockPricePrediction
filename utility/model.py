@@ -22,8 +22,8 @@ def dnn(n_obs):
     """ A multi-layer perceptron """
     # print('\n',n_obs[0],'\n')
     model = Sequential()
-    model.add(Dense(units=256, input_shape=[n_obs[1]], activation="relu"))
-    model.add(Dense(units=512, activation="relu"))
+    model.add(Dense(units=256, input_shape=[n_obs[1]], activation="linear"))
+    model.add(Dense(units=512, activation="linear"))
     model.add(Dropout(0.3))
     # model.add(Dense(units=1024, activation="relu"))
     # model.add(Dense(1, activation="linear"))
@@ -40,8 +40,8 @@ def conv1d(n_obs):
     strides=1
     padding = 'same'
     model = Sequential()
-    model.add(Conv1D(filters = 64, kernel_size=kernel_size, strides=strides, padding=padding, activation = 'relu',input_shape=(n_obs[1],n_obs[2])))
-    model.add(Conv1D(filters = 128, kernel_size=kernel_size, strides=strides, padding=padding, activation = 'relu'))
+    model.add(Conv1D(filters = 64, kernel_size=kernel_size, strides=strides, padding=padding, activation = 'linear',input_shape=(n_obs[1],n_obs[2])))
+    model.add(Conv1D(filters = 128, kernel_size=kernel_size, strides=strides, padding=padding, activation = 'linear'))
     model.add(Dropout(0.3))
     model.add(BatchNormalization())
     model.add(MaxPooling1D(2))
@@ -62,8 +62,8 @@ def conv2d(n_obs):
     # strides=(1,1)
     padding = 'same'
     model = Sequential()
-    model.add(Conv2D(filters = 64, kernel_size=kernel_size,  padding=padding, activation = 'relu',input_shape=(n_obs[1],n_obs[2],1)))
-    model.add(Conv2D(filters = 128, kernel_size=kernel_size,  padding=padding, activation = 'relu'))
+    model.add(Conv2D(filters = 64, kernel_size=kernel_size,  padding=padding, activation = 'linear',input_shape=(n_obs[1],n_obs[2],1)))
+    model.add(Conv2D(filters = 128, kernel_size=kernel_size,  padding=padding, activation = 'linear'))
     model.add(Dropout(0.3))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(2))
@@ -79,9 +79,9 @@ LSTM
 '''
 def lstm(n_obs):
     model = Sequential()
-    model.add(LSTM(64, return_sequences=True,input_shape=(n_obs[1],n_obs[2])))
+    model.add(LSTM(64, return_sequences=True,activation = 'linear',input_shape=(n_obs[1],n_obs[2])))
     # model.add(LSTM(128, dropout=0.2, return_sequences=True))
-    model.add(LSTM(128, return_sequences=True,dropout=0.3))
+    model.add(LSTM(128, return_sequences=True,activation = 'linear',dropout=0.3))
     # model.add(LSTM(256, return_sequences=True,dropout=0.3))
     model.add(Flatten())
     model.add(Dropout(0.3))
@@ -223,12 +223,12 @@ class TransformerEncoder(Layer):
             input_shape=input_shape, epsilon=1e-6)
 
         self.ff_conv1D_1 = Conv1D(
-            filters=self.ff_dim, kernel_size=1, activation='relu')
+            # filters=self.ff_dim, kernel_size=1, activation='relu')
+            filters=self.ff_dim, kernel_size=1)
         # input_shape[0]=(batch, seq_len, 7), input_shape[0][-1] = 7
         self.ff_conv1D_2 = Conv1D(filters=input_shape[0][-1], kernel_size=1)
         self.ff_dropout = Dropout(self.dropout_rate)
-        self.ff_normalize = LayerNormalization(
-            input_shape=input_shape, epsilon=1e-6)
+        self.ff_normalize = LayerNormalization(input_shape=input_shape, epsilon=1e-6)
 
     def call(self, inputs):  # inputs = (in_seq, in_seq, in_seq)
         attn_layer = self.attn_multi(inputs)
