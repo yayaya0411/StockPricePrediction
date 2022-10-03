@@ -70,27 +70,37 @@ def label(df, n = 1):
 def scaler(X, y ,config, args):
     scalerX_file = os.path.join('scaler', config['STOCK']['stock'] + config['STOCK']['scaler_X'])
     scalery_file = os.path.join('scaler', config['STOCK']['stock'] + config['STOCK']['scaler_y'])
+    
     if args == 'train':
-        scaler_X = StandardScaler()
-        scaler_y = StandardScaler()
-        X = scaler_X.fit_transform(X.values)
-        y = scaler_y.fit_transform(y.values.reshape(-1,1))
-        pickle.dump(scaler_X, open(scalerX_file, 'wb'))
-        pickle.dump(scaler_y, open(scalery_file, 'wb'))
+        if bool(config["STOCK"]["scale"]):
+            print('\nscale\n')
+            scaler_X = StandardScaler()
+            scaler_y = StandardScaler()
+            X = scaler_X.fit_transform(X.values)
+            y = scaler_y.fit_transform(y.values.reshape(-1,1))
+            pickle.dump(scaler_X, open(scalerX_file, 'wb'))
+            pickle.dump(scaler_y, open(scalery_file, 'wb'))
+
     if args == 'test':
-        scaler_X = pickle.load(open(scalerX_file, 'rb'))
-        scaler_y = pickle.load(open(scalery_file, 'rb'))
-        X = scaler_X.transform(X.values)
-        y = scaler_y.transform(y.values.reshape(-1,1))
+        if bool(config["STOCK"]["scale"]):
+            print('\nscale\n')
+            scaler_X = pickle.load(open(scalerX_file, 'rb'))
+            scaler_y = pickle.load(open(scalery_file, 'rb'))
+            X = scaler_X.transform(X.values)
+            y = scaler_y.transform(y.values.reshape(-1,1))
     return X, y
 
-def training_window(X, y, config):
+def training_window(X, y, config, args):
     time_slide = int(config['MODEL']['slide'])
     X_=[]
-    for i in range(time_slide, X.shape[0]): 
-        tmp = X[i-time_slide:i]
-        X_.append(tmp)
-    y_ = y[time_slide:]    
+    if args != 'dnn':
+        for i in range(time_slide, X.shape[0]): 
+            tmp = X[i-time_slide:i]
+            X_.append(tmp)
+        y_ = y[time_slide:]    
+    else:
+        X_ = X[time_slide:]    
+        y_ = y[time_slide:]
     return np.array(X_), np.array(y_)
 
 def split_valid(X, y, config):

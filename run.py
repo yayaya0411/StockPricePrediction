@@ -10,6 +10,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error
 
 from utility.utility import *
 from utility.training import callback
@@ -40,10 +41,15 @@ def main(config, args):
     X, y = label(df)
     logging.info(f'Make Data Label')
 
+    # scale=False
+    # if scale:
+    #     X_scaler, y_scaler = scaler(X, y, config, args.mode)
+    # else:
+    #     X_scaler, y_scaler = X.values, y.values
     X_scaler, y_scaler = scaler(X, y, config, args.mode)
     logging.info(f'Scale Data')
 
-    X_scaler, y_scaler = training_window(X_scaler, y_scaler , config)
+    X_scaler, y_scaler = training_window(X_scaler, y_scaler , config, args.model_type)
     logging.info(f'Make Training Windows')
     
     model = load_model(X_scaler.shape, args.model_type)
@@ -86,8 +92,8 @@ def main(config, args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--mode', type=str, default = 'train', required=False, help='either "train" or "test"')
-    parser.add_argument('-e', '--episode', type=int, default=10, help='number of episode to run')
-    parser.add_argument('-t', '--model_type', type=str, default='lstm', required=False, help='"dnn", "conv1d", "conv2d", "lstm" or "transformer"')
+    # parser.add_argument('-e', '--episode', type=int, default=10, help='number of episode to run')
+    parser.add_argument('-t', '--model_type', type=str, default='dnn', required=False, help='"dnn", "conv1d", "conv2d", "lstm" or "transformer"')
     parser.add_argument('-s', '--stock', type=str, required=False, default='TWII', help='stock index')
     parser.add_argument('-w', '--weight', type=str, required=False, help='stock portfolios')
     args = parser.parse_args()
