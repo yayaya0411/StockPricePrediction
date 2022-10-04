@@ -14,11 +14,12 @@ def callback(config, args, datetime_prefix=None):
     # csv_logger = CSVLogger(f'logs/csv_logger/{args.model_type}/{datetime_prefix}', separator = ',', append = False)
     model_setting = config['MODEL']
     checkpoint = ModelCheckpoint(
-        filepath = os.path.join(f'model/{args.model_type}/{datetime_prefix}_e{model_setting["epoch"]}_s{model_setting["slide"]}'),
+        filepath = os.path.join(f'model/{args.model_type}/{datetime_prefix}_{config["STOCK"]["stock"]}_e{model_setting["epoch"]}_s{model_setting["slide"]}'),
         monitor = 'val_loss',
         verbose = 1,
         save_best_only = True,
     )
 
     # return [stopping, TqdmCallback(verbose=2), tensorboard_callback, checkpoint]
-    return [stopping, tensorboard_callback, checkpoint]
+    # return [stopping, tensorboard_callback, checkpoint]
+    return [stopping, tensorboard_callback]

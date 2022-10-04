@@ -1,5 +1,5 @@
-python run.py -m train -t dnn -s TWII
-python run.py -m train -t transformer -s TWII
-python run.py -m train -t conv1d -s TWII
-python run.py -m train -t conv2d -s TWII
-python run.py -m train -t lstm -s TWII
+python run.py -m train -t dnn 
+python run.py -m train -t transformer 
+python run.py -m train -t conv1d 
+python run.py -m train -t conv2d 
+python run.py -m train -t lstm 

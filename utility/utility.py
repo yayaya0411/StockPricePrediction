@@ -50,13 +50,14 @@ def make_dir(config):
 def read_data(config, args):
     # reading data by config
     if args == 'train':
-        year = config['STOCK']['train_year']   
+        # year = config['STOCK']['train_year']   
+        train_path = os.path.join('data', config['STOCK']['stock']+'_train'+'.csv')
     if args == 'test':
-        year = config['STOCK']['test_year']   
-    index_list = config['STOCK']['index'].split(',')
-    train_path = os.path.join('data', config['STOCK']['stock']+'_'+ year +'.csv')
+        # year = config['STOCK']['test_year']   
+        train_path = os.path.join('data', config['STOCK']['stock']+'_test'+'.csv')
     print(train_path)
     df_stock = pd.read_csv(train_path, index_col = 0)
+    index_list = config['STOCK']['index'].split(',')
     df_index = talib_index(df_stock)
     df_index = df_index[index_list]
     return df_index

@@ -60,18 +60,21 @@ def main(config, args):
         history = model.fit(
             X_train, y_train, 
             epochs=int(config['MODEL']['epoch']),
-            verbose = 0,
+            verbose = 1,
+            batch_size=4,
             validation_data=(X_valid, y_valid), 
             callbacks = callback(config, args, datetime_prefix)
         )
         y_pred = model.predict(X_valid)
-        y_pred_inverse = inverse_predict(y_pred, config)
+        print(y_pred[0])
+        if bool(config["STOCK"]["scale"]):
+            y_pred = inverse_predict(y_pred, config)
 
         model_setting = config['MODEL']
-        model.save_weights(f'model/{args.model_type}/{datetime_prefix}_e{model_setting["epoch"]}_s{model_setting["slide"]}')
+        model.save_weights(f'model/{args.model_type}/{datetime_prefix}_{config["STOCK"]["stock"]}_e{model_setting["epoch"]}_s{model_setting["slide"]}')
 
         # score = model.evaluate(X_valid, y_valid, verbose=0)
-        valid_mse = mean_squared_error(np.array(y[int(config['MODEL']['slide'])+split:]), y_pred_inverse, squared=False)   
+        valid_mse = mean_squared_error(np.array(y[int(config['MODEL']['slide'])+split:]), y_pred, squared=False)   
         # print(pd.DataFrame((np.array(y[int(config['MODEL']['slide'])+split:]),y_pred_inverse)))
         print('mse',valid_mse)
         pd.DataFrame(history.history).to_csv(f'logs/csv_logger/{args.model_type}/{datetime_prefix}_{valid_mse}.csv')
@@ -94,7 +97,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--mode', type=str, default = 'train', required=False, help='either "train" or "test"')
     # parser.add_argument('-e', '--episode', type=int, default=10, help='number of episode to run')
     parser.add_argument('-t', '--model_type', type=str, default='dnn', required=False, help='"dnn", "conv1d", "conv2d", "lstm" or "transformer"')
-    parser.add_argument('-s', '--stock', type=str, required=False, default='TWII', help='stock index')
+    # parser.add_argument('-s', '--stock', type=str, required=False, default='TWII', help='stock index')
     parser.add_argument('-w', '--weight', type=str, required=False, help='stock portfolios')
     args = parser.parse_args()
 
