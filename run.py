@@ -66,9 +66,9 @@ def main(config, args):
             callbacks = callback(config, args, datetime_prefix)
         )
         y_pred = model.predict(X_valid)
-        print(y_pred[0])
-        if bool(config["STOCK"]["scale"]):
-            y_pred = inverse_predict(y_pred, config)
+
+        # if bool(config["STOCK"]["scale"]):
+        #     y_pred = inverse_predict(y_pred, config)
 
         model_setting = config['MODEL']
         model.save_weights(f'model/{args.model_type}/{datetime_prefix}_{config["STOCK"]["stock"]}_e{model_setting["epoch"]}_s{model_setting["slide"]}')

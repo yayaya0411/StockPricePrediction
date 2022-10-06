@@ -82,7 +82,7 @@ LSTM
 def lstm(n_obs):
     model = Sequential()
     model.add(LSTM(128, return_sequences=True, activation = 'relu',input_shape=(n_obs[1],n_obs[2])))
-    model.add(LSTM(128, activation = 'relu',input_shape=(n_obs[1],n_obs[2])))
+    model.add(LSTM(128, activation = 'relu'))
     # model.add(LSTM(128, dropout=0.2, return_sequences=True))
     model.add(Dropout(0.3))
     # model.add(BatchNormalization())
