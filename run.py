@@ -41,11 +41,6 @@ def main(config, args):
     X, y = label(df)
     logging.info(f'Make Data Label')
 
-    # scale=False
-    # if scale:
-    #     X_scaler, y_scaler = scaler(X, y, config, args.mode)
-    # else:
-    #     X_scaler, y_scaler = X.values, y.values
     X_scaler, y_scaler = scaler(X, y, config, args.mode)
     logging.info(f'Scale Data')
 

@@ -23,8 +23,8 @@ def log(config, args):
     logging.info(f'Mode:                     {args.mode}')
     logging.info(f'Model Type:               {args.model_type}')
     logging.info(f'Training Object:          {config["STOCK"]["stock"]}')
-    logging.info(f'Training Year:            {config["STOCK"]["train_year"]}')
-    logging.info(f'Testing Year:             {config["STOCK"]["test_year"]}')
+    # logging.info(f'Training Year:            {config["STOCK"]["train_year"]}')
+    # logging.info(f'Testing Year:             {config["STOCK"]["test_year"]}')
     logging.info(f'Window Slide:             {config["MODEL"]["slide"]} days')
     logging.info(f'Training Episode:         {config["MODEL"]["epoch"]}')
     logging.info(f'='*30)
@@ -73,7 +73,7 @@ def scaler(X, y ,config, args):
     scalery_file = os.path.join('scaler', config['STOCK']['stock'] + config['STOCK']['scaler_y'])
     
     if args == 'train':
-        if bool(config["STOCK"]["scale"]):
+        if int(config["STOCK"]["scale"]):
             print('\nscale\n')
             scaler_X = StandardScaler()
             scaler_y = StandardScaler()
@@ -83,7 +83,7 @@ def scaler(X, y ,config, args):
             pickle.dump(scaler_y, open(scalery_file, 'wb'))
 
     if args == 'test':
-        if bool(config["STOCK"]["scale"]):
+        if int(config["STOCK"]["scale"]):
             print('\nscale\n')
             scaler_X = pickle.load(open(scalerX_file, 'rb'))
             scaler_y = pickle.load(open(scalery_file, 'rb'))
