@@ -34,66 +34,75 @@ def main(config, args):
     print(f'Training Start')
 
     # reading data
-    print(f'Load Data Begain')
+    print(f'Load Data Begin')
     df = pickle.load(open('data.pk', 'rb'))
     # df = read_data(config, args.mode)
+    if args.mode == 'train':
+        train  = df.trainSet 
+        valid  = df.validSet 
+        
+        X_train=[]
+        y_train=[]
+        for i in range(0,len(train)):
+            X_train.append(train[i]['target_history'])
+            y_train.append(train[i]['target_price'])
+        X_train = np.array(X_train)
+        y_train = np.array(y_train)
+
+        X_valid=[]
+        y_valid=[]
+        for i in range(0,len(valid)):
+            X_valid.append(valid[i]['target_history'])
+            y_valid.append(valid[i]['target_price'])
+        X_valid = np.array(X_valid)
+        y_valid = np.array(y_valid)
+
+        model = load_model(X_valid.shape, args.model_type)
+        
+    if args.mode == 'test':
+        test  = df.testSet 
+        X_test=[]
+        y_test=[]
+        for i in range(0,len(test)):
+            X_test.append(test[i]['target_history'])
+            y_test.append(test[i]['target_price'])
+        X_test = np.array(X_test)
+        y_test = np.array(y_test)
+
+        model = load_model(X_test.shape, args.model_type)
+
     print(f'Load Data Finish')
 
-    X_train=[]
-    y_train=[]
-    for i in range(0,len(df.trainSet)):
-        X_train.append(df.trainSet[i]['target_history'])
-        y_train.append(df.trainSet[i]['target_price'])
-    X_train = np.array(X_train)
-    y_train = np.array(y_train)
-    
-    X_valid=[]
-    y_valid=[]
-    for i in range(0,len(df.validSet)):
-        X_valid.append(df.validSet[i]['target_history'])
-        y_valid.append(df.validSet[i]['target_price'])
-    X_valid = np.array(X_valid)
-    y_valid = np.array(y_valid)
-
-    model = load_model(X_valid.shape, args.model_type)
     # print(args.mode) 
-
     if args.mode == 'train':
         history = model.fit(
             X_train, y_train, 
             epochs=int(config['MODEL']['epoch']),
             verbose = 1,
-            batch_size=4,
+            batch_size=512,
             validation_data=(X_valid, y_valid), 
             callbacks = callback(config, args, datetime_prefix)
         )
         y_pred = model.predict(X_valid)
 
-        model.save_weights(f'mi_model/{args.model_type}')
+        model.save_weights(f'mi_model/{args.model_type}/{args.model_type}')
 
-        valid_mse = mean_squared_error(y_valid, y_pred, squared=False)   
+        valid_mse = mean_squared_error(y_valid.reshape(-1,1), y_pred, squared=False)   
         print('mse',valid_mse)
         pd.DataFrame(history.history).to_csv(f'logs/csv_logger/{args.model_type}/{datetime_prefix}_{valid_mse}.csv')
 
     if args.mode == 'test':
-        model.load_weights(f'model/{args.model_type}/{config["MODEL_WEIGHTS"][args.model_type]}')
-        y_pred = model.predict(X_scaler)
-        y_inverse = inverse_predict(y_pred, config)
-        mse = mean_squared_error(y[int(config['MODEL']['slide']):], y_inverse, squared=False)   
+        model.load_weights(f'mi_model/{args.model_type}/{args.model_type}')
+        y_pred = model.predict(X_test)
+        # y_inverse = inverse_predict(y_pred, config)
+        mse = mean_squared_error(y_test.reshape(-1,1), y_pred, squared=False)   
         
-        fig, ax = plt.subplots(1, 1, figsize=(12, 4), dpi=100)
-
-        sns.lineplot(data = y[int(config['MODEL']['slide']):], ax=ax, color='r',label='y_t')
-        sns.lineplot(data = y_inverse, ax=ax,color='c',label='r')
-        plt.show()
         print(args.model_type,'mse',mse)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--mode', type=str, default = 'train', required=False, help='either "train" or "test"')
-    # parser.add_argument('-e', '--episode', type=int, default=10, help='number of episode to run')
     parser.add_argument('-t', '--model_type', type=str, default='lstm', required=False, help='"dnn", "conv1d", "conv2d", "lstm" or "transformer"')
-    # parser.add_argument('-s', '--stock', type=str, required=False, default='TWII', help='stock index')
     parser.add_argument('-w', '--weight', type=str, required=False, help='stock portfolios')
     args = parser.parse_args()
 

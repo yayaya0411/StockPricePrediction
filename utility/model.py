@@ -8,7 +8,8 @@ from tensorflow.keras.optimizers import Adam
 import numpy as np
 
 batch_size = 32
-seq_len = 30
+# seq_len = 30
+seq_len = 20
 
 d_k = 256
 d_v = 256
@@ -22,12 +23,14 @@ def dnn(n_obs):
     """ A multi-layer perceptron """
     # print('\n',n_obs[0],'\n')
     model = Sequential()
-    model.add(Dense(units=1024, input_shape=[n_obs[1]], activation="relu"))
-    model.add(Dropout(0.3))
+    model.add(Dense(units=128, input_shape=[n_obs[1]], activation="relu"))
+    model.add(Dense(units=256, input_shape=[n_obs[1]], activation="relu"))
+    # model.add(Dropout(0.3))
     model.add(BatchNormalization())
-    model.add(Dense(units=1024, activation="relu"))
-    model.add(Dropout(0.3))
-    model.add(BatchNormalization())
+    # model.add(Dense(units=256, activation="relu"))
+    # model.add(Dense(units=128, activation="relu"))
+    # model.add(Dropout(0.3))
+    # model.add(BatchNormalization())
     model.add(Dense(1))
     model.compile(loss="mse", optimizer='adam')
     print(model.summary())
@@ -43,7 +46,7 @@ def conv1d(n_obs):
     model = Sequential()
     model.add(Conv1D(filters = 128, kernel_size=kernel_size, strides=strides, padding=padding, activation = 'relu',input_shape=(n_obs[1],n_obs[2])))
     model.add(Conv1D(filters = 128, kernel_size=kernel_size, strides=strides, padding=padding, activation = 'relu'))
-    model.add(Dropout(0.3))
+    # model.add(Dropout(0.3))
     model.add(BatchNormalization())
     model.add(MaxPooling1D(2))
     # model.add(Conv1D(filters = 512, kernel_size=kernel_size, strides=strides, padding=padding, activation = 'relu'))
@@ -64,7 +67,7 @@ def conv2d(n_obs):
     model = Sequential()
     model.add(Conv2D(filters = 128, kernel_size=kernel_size,  padding=padding, activation = 'relu',input_shape=(n_obs[1],n_obs[2],1)))
     model.add(Conv2D(filters = 128, kernel_size=kernel_size,  padding=padding, activation = 'relu'))
-    model.add(Dropout(0.3))
+    # model.add(Dropout(0.3))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(2))
     # model.add(Conv2D(filters = 128, kernel_size=kernel_size,  padding=padding, activation = 'linear'))
@@ -81,17 +84,17 @@ LSTM
 '''
 def lstm(n_obs):
     model = Sequential()
-    model.add(LSTM(128, return_sequences=True, activation = 'relu',input_shape=(n_obs[1],n_obs[2])))
-    model.add(LSTM(128, activation = 'relu'))
+    model.add(LSTM(64, return_sequences=True, activation = 'relu',input_shape=(n_obs[1],n_obs[2])))
+    model.add(LSTM(128, return_sequences=True, activation = 'relu'))
     # model.add(LSTM(128, dropout=0.2, return_sequences=True))
-    model.add(Dropout(0.3))
-    model.add(BatchNormalization())
-    # model.add(LSTM(128, return_sequences=True,activation = 'relu',dropout=0.3))
-    # model.add(LSTM(128, return_sequences=True,dropout=0.3))
+    # model.add(Dropout(0.3))
+    # model.add(BatchNormalization())
+    model.add(LSTM(256, return_sequences=True,activation = 'relu'))
+    model.add(LSTM(128, return_sequences=True))
+    model.add(LSTM(128))
     # model.add(BatchNormalization())
     # model.add(Flatten())
     # model.add(Dropout(0.3))
-    # model.add(Dense(1, activation="linear"))
     model.add(Dense(1))
     # model.compile(loss="mse", optimizer='adam', metrics=['mae', 'mape'])
     model.compile(loss="mean_squared_error", optimizer='adam')

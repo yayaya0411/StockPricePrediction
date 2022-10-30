@@ -11,6 +11,8 @@ assets/*
 logs/*
 ror/*
 model/*
+mi_model/*
+graphs/*
 
 # google drive sync file
 desktop.ini
