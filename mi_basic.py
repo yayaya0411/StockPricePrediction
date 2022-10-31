@@ -40,24 +40,67 @@ def main(config, args):
     if args.mode == 'train':
         train  = df.trainSet 
         valid  = df.validSet 
-        
-        X_train=[]
-        y_train=[]
-        for i in range(0,len(train)):
-            X_train.append(train[i]['target_history'])
-            y_train.append(train[i]['target_price'])
-        X_train = np.array(X_train)
-        y_train = np.array(y_train)
+        if args.model_type == 'milstm':
+            target_train=[]
+            pos_train=[]
+            neg_train=[]
+            index_train=[]
+            y_train=[]
+            for i in range(0,len(train)):
+                target_train.append(train[i]['target_history'])
+                pos_train.append(train[i]['pos_history'])
+                neg_train.append(train[i]['neg_history'])
+                index_train.append(train[i]['index_history'])
+                y_train.append(train[i]['target_price'])
 
-        X_valid=[]
-        y_valid=[]
-        for i in range(0,len(valid)):
-            X_valid.append(valid[i]['target_history'])
-            y_valid.append(valid[i]['target_price'])
-        X_valid = np.array(X_valid)
-        y_valid = np.array(y_valid)
+            X_train = {
+                'target_history':target_train,
+                'pos_history':pos_train,
+                'neg_history':neg_train,
+                'index_history':index_train,
+            }
+            y_train = np.array(y_train) 
 
-        model = load_model(X_valid.shape, args.model_type)
+            target_valid=[]
+            pos_valid=[]
+            neg_valid=[]
+            index_valid=[]
+            y_valid=[]
+            for i in range(0,len(valid)):
+                target_valid.append(valid[i]['target_history'])
+                pos_valid.append(valid[i]['pos_history'])
+                neg_valid.append(valid[i]['neg_history'])
+                index_valid.append(valid[i]['index_history'])
+                y_valid.append(valid[i]['target_price'])
+
+            X_valid = {
+                'target_history':target_valid,
+                'pos_history':pos_valid,
+                'neg_history':neg_valid,
+                'index_history':index_valid,
+            }
+            y_valid = np.array(y_valid)
+
+            model = load_model(X_valid, args.model_type)
+
+        else:    
+            X_train=[]
+            y_train=[]
+            for i in range(0,len(train)):
+                X_train.append(train[i]['target_history'])
+                y_train.append(train[i]['target_price'])
+            X_train = np.array(X_train)
+            y_train = np.array(y_train)
+
+            X_valid=[]
+            y_valid=[]
+            for i in range(0,len(valid)):
+                X_valid.append(valid[i]['target_history'])
+                y_valid.append(valid[i]['target_price'])
+            X_valid = np.array(X_valid)
+            y_valid = np.array(y_valid)
+
+            model = load_model(X_valid.shape, args.model_type)
         
     if args.mode == 'test':
         test  = df.testSet 
@@ -73,6 +116,9 @@ def main(config, args):
 
     print(f'Load Data Finish')
 
+    target = np.array(X_train['target_history']).shape
+    print('x train shape:',target)
+    print('y train shape:',y_train.shape)
     # print(args.mode) 
     if args.mode == 'train':
         history = model.fit(
@@ -88,7 +134,7 @@ def main(config, args):
         model.save_weights(f'mi_model/{args.model_type}/{args.model_type}')
 
         valid_mse = mean_squared_error(y_valid.reshape(-1,1), y_pred, squared=False)   
-        print('mse',valid_mse)
+        print(args.model_type, 'mse',valid_mse)
         pd.DataFrame(history.history).to_csv(f'logs/csv_logger/{args.model_type}/{datetime_prefix}_{valid_mse}.csv')
 
     if args.mode == 'test':
@@ -102,7 +148,7 @@ def main(config, args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--mode', type=str, default = 'train', required=False, help='either "train" or "test"')
-    parser.add_argument('-t', '--model_type', type=str, default='lstm', required=False, help='"dnn", "conv1d", "conv2d", "lstm" or "transformer"')
+    parser.add_argument('-t', '--model_type', type=str, default='milstm', required=False, help='"dnn", "conv1d", "conv2d", "lstm" or "transformer"')
     parser.add_argument('-w', '--weight', type=str, required=False, help='stock portfolios')
     args = parser.parse_args()
 

@@ -16,6 +16,53 @@ d_v = 256
 n_heads = 12
 ff_dim = 256
 
+"""
+Multi Input Network
+"""
+def MultiInput(input_x):
+    # define two sets of inputs
+    
+    target = np.array(input_x['target_history']).shape
+    pos = np.array(input_x['pos_history']).shape
+    neg = np.array(input_x['neg_history']).shape
+    index = np.array(input_x['index_history']).shape
+
+    target_history = Input(shape=(target[1],target[2]), name="target_history")
+    pos_history = Input(shape=(pos[1],pos[2]), name="pos_history")
+    neg_history = Input(shape=(neg[1],neg[2]), name="neg_history")
+    index_history = Input(shape=(index[1],index[2]), name="index_history")
+    # target_price = Input(shape=(n_obs[1],n_obs[2]), name="target_price")
+
+    # the first branch operates on the first input
+    x = LSTM(32, return_sequences=True, activation="relu")(target_history)
+    x = Model(inputs=target_history, outputs=x)
+
+    # the second branch opreates on the second input
+    y = LSTM(32, return_sequences=True, activation="relu")(pos_history)
+    y = Model(inputs=pos_history, outputs=y)
+
+    w = LSTM(32, return_sequences=True, activation="relu")(neg_history)
+    w = Model(inputs=neg_history, outputs=w)
+
+    i = LSTM(32, return_sequences=True, activation="relu")(index_history)
+    i = Model(inputs=index_history, outputs=i)
+
+    # combine the output of the two branches
+    combined = concatenate([x.output, y.output, w.output, i.output],axis=1)
+
+    # combined outputs
+    z = LSTM(32, activation="relu")(combined)
+    # z = Dense(256, activation="relu")(z)
+    z = Flatten()(z)
+    # z = Dropout(0.5)(z)
+    outputs = Dense(1, name='output')(z)
+    # our model will accept the inputs of the two branches and    # then output a single value
+    model = Model(inputs=[x.input, y.input, w.input, i.input], outputs=[outputs] , name = 'MultiInput')
+    model.compile(loss="mse", optimizer='adam')
+    print(model.summary())
+    return model
+
+
 '''
 dnn 
 '''
