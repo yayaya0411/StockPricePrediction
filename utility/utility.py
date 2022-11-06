@@ -6,7 +6,7 @@ import numpy as np
 import pickle
 from sklearn.preprocessing import StandardScaler
 from utility.techIndex import talib_index
-from utility.model import dnn, lstm, conv1d, conv2d, transformer, MultiInput
+from utility.model import dnn, lstm, conv1d, conv2d, transformer
 
 
 def log(config, args):
@@ -120,8 +120,6 @@ def load_model(X, args):
         return lstm(X)
     if args == 'transformer':
         return transformer(X)
-    if args == 'milstm':
-        return MultiInput(X)
 
 def inverse_predict(y, config):
     scalery_file = os.path.join('scaler', config['STOCK']['stock'] + config['STOCK']['scaler_y'])
@@ -129,3 +127,34 @@ def inverse_predict(y, config):
     y = scaler_y.inverse_transform(y)
     return y
 
+def miinput(dataset):
+    target=[]
+    pos=[]
+    neg=[]
+    index=[]
+    y=[]
+    for i in range(0,len(dataset)):
+        target.append(dataset[i]['target_history'])
+        pos.append(dataset[i]['pos_history'])
+        neg.append(dataset[i]['neg_history'])
+        index.append(dataset[i]['index_history'])
+        y.append(dataset[i]['target_price'])
+
+    X = {
+        'target_history':np.array(target),
+        'pos_history':np.array(pos),
+        'neg_history':np.array(neg),
+        'index_history':np.array(index),
+    }
+    y = np.array(y)
+    return X, y
+
+def input(dataset):
+    X=[]
+    y=[]
+    for i in range(0,len(dataset)):
+        X.append(dataset[i]['target_history'])
+        y.append(dataset[i]['target_price'])
+    X = np.array(X)
+    y = np.array(y)
+    return X, y

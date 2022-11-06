@@ -15,6 +15,9 @@ pandas-datareader = "*"
 openpyxl = "*"
 tqdm = "*"
 seaborn = "*"
+pydot = "*"
+graphviz = "*"
+pydotplus = "*"
 
 [dev-packages]
 ipykernel = "*"
